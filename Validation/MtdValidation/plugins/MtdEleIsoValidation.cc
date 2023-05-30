@@ -84,10 +84,10 @@ private:
   static constexpr float max_dz_vtx_cut = 0.5;
   static constexpr float max_dxy_vtx_cut = 0.2;
   // timing cuts - has to be 7 values here!!! Code created for 7 dt values!! Values for resolution 100;90;80;70;60;50;40 ps
-  const std::vector<double> max_dt_vtx_cut{0.30, 0.27, 0.24, 0.21, 0.18, 0.15, 0.12};  // default cuts
-  const std::vector<double> max_dt_track_cut{0.30, 0.27, 0.24, 0.21, 0.18, 0.15, 0.12}; // default cuts
-  //const std::vector<double> max_dt_vtx_cut{ 0.24, 0.21, 0.18, 0.15, 0.12, 0.08, 0.04};  // test cuts
-  //const std::vector<double> max_dt_track_cut{ 0.24, 0.21, 0.18, 0.15, 0.12, 0.08, 0.04}; // test cuts
+  //const std::vector<double> max_dt_vtx_cut{0.30, 0.27, 0.24, 0.21, 0.18, 0.15, 0.12};  // default cuts
+  //const std::vector<double> max_dt_track_cut{0.30, 0.27, 0.24, 0.21, 0.18, 0.15, 0.12}; // default cuts
+  const std::vector<double> max_dt_vtx_cut{0.30, 0.24, 0.18, 0.15, 0.12, 0.08, 0.04};  // test cuts
+  const std::vector<double> max_dt_track_cut{0.30, 0.24, 0.18, 0.15, 0.12, 0.08, 0.04}; // test cuts
   static constexpr float min_strip_cut = 0.01;
   static constexpr float min_track_mtd_mva_cut = 0.5;
   const std::vector<double> pT_bins_dt_distrb{10,20,30,40,50,60,70,80,90,100};  
@@ -849,7 +849,7 @@ void MtdEleIsoValidation::analyze(const edm::Event& iEvent, const edm::EventSetu
           double dt_vtx = 0;  // dt regular track vs vtx
 
           if (TrkMTDTimeErr > 0 && Vtx_chosen.tError() > 0) {
-            dt_vtx = TrkMTDTime - Vtx_chosen.t();
+            dt_vtx = fabs(TrkMTDTime - Vtx_chosen.t());
             //dt_vtx_signif = dt_vtx/std::sqrt(TrkMTDTimeErr*TrkMTDTimeErr + Vtx_chosen.tError()*Vtx_chosen.tError());
             meEle_no_dt_check_->Fill(1);
 
