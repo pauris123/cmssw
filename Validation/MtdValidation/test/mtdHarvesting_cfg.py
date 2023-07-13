@@ -15,6 +15,7 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 mylist = FileUtils.loadListFromFile('filenames_update.txt') # input file with file names from grid grid control output
 
+
 process.MessageLogger.cerr.FwkReport  = cms.untracked.PSet(
     reportEvery = cms.untracked.int32(-1),
 )
