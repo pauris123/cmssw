@@ -1,11 +1,5 @@
-#from asyncore import socket_map
-from turtle import setundobuffer
 import numpy as np
-import pandas as pn
 import uproot as up
-import awkward as ak
-import time
-import math
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
 
