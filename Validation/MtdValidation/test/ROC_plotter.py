@@ -14,6 +14,7 @@ This is a sample code for ROC curve plotting (Feel free to change it to Your nee
 Code is ran from "Validation/MtdValidation/test" directory
 Before running the code initialize cmsenv
 Run the code by using python3 -> 'python3 ROC_ploter.py'
+Change the DQM File and ROC plot output directories accordingly to Your workspace
 
 """
 
