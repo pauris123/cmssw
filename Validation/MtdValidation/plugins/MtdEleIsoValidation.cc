@@ -982,7 +982,7 @@ void MtdEleIsoValidation::analyze(const edm::Event& iEvent, const edm::EventSetu
 
     // selecting "good" RECO electrons
     // PARAM
-    if (ele.pt() < 10 || std::abs(ele.eta()) > 2.4 || ele_track_source_dz > max_dz_vtx_cut ||
+    if (ele.pt() < 10 && std::abs(ele.eta()) > 2.4 && ele_track_source_dz > max_dz_vtx_cut &&
         ele_track_source_dxy > max_dxy_vtx_cut)
       continue;
 
