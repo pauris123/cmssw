@@ -3,7 +3,7 @@ from Configuration.Eras.Modifier_tracker_apv_vfp30_2016_cff import tracker_apv_v
 import RecoTracker.IterativeTracking.iterativeTkConfig as _cfg
 from Configuration.Eras.Modifier_fastSim_cff import fastSim
 
-#for dnn classifier
+# for dnn classifier
 from Configuration.ProcessModifiers.trackdnn_cff import trackdnn
 from RecoTracker.IterativeTracking.dnnQualityCuts import qualityCutDictionary
 
@@ -209,7 +209,7 @@ _tracker_apv_vfp30_2016.toModify(lowPtTripletStepChi2Est,
 
 # TRACK BUILDING
 import RecoTracker.CkfPattern.GroupedCkfTrajectoryBuilder_cfi
-lowPtTripletStepTrajectoryBuilder = RecoTracker.CkfPattern.GroupedCkfTrajectoryBuilder_cfi.GroupedCkfTrajectoryBuilder.clone(
+lowPtTripletStepTrajectoryBuilder = RecoTracker.CkfPattern.GroupedCkfTrajectoryBuilder_cfi.GroupedCkfTrajectoryBuilderIterativeDefault.clone(
     trajectoryFilter       = dict(refToPSet_ = 'lowPtTripletStepTrajectoryFilter'),
     maxCand                = 4,
     estimator              = 'lowPtTripletStepChi2Est',
@@ -230,7 +230,7 @@ trackingPhase2PU140.toModify(lowPtTripletStepTrajectoryBuilder,
 # MAKING OF TRACK CANDIDATES
 import RecoTracker.CkfPattern.CkfTrackCandidates_cfi
 # Give handle for CKF for HI
-_lowPtTripletStepTrackCandidatesCkf = RecoTracker.CkfPattern.CkfTrackCandidates_cfi.ckfTrackCandidates.clone(
+_lowPtTripletStepTrackCandidatesCkf = RecoTracker.CkfPattern.CkfTrackCandidates_cfi.ckfTrackCandidatesIterativeDefault.clone(
     src = 'lowPtTripletStepSeeds',
     ### these two parameters are relevant only for the CachingSeedCleanerBySharedInput
     numHitsForSeedCleaner       = 50,
@@ -242,7 +242,6 @@ _lowPtTripletStepTrackCandidatesCkf = RecoTracker.CkfPattern.CkfTrackCandidates_
     TrajectoryCleaner           = 'lowPtTripletStepTrajectoryCleanerBySharedHits',
 )
 lowPtTripletStepTrackCandidates = _lowPtTripletStepTrackCandidatesCkf.clone()
-
 trackingPhase2PU140.toModify(lowPtTripletStepTrackCandidates,
     clustersToSkip = '',
     phase2clustersToSkip = 'lowPtTripletStepClusters'
@@ -282,7 +281,7 @@ fastSim.toReplaceWith(lowPtTripletStepTrackCandidates,
 
 # TRACK FITTING
 import RecoTracker.TrackProducer.TrackProducerIterativeDefault_cfi
-lowPtTripletStepTracks = RecoTracker.TrackProducer.TrackProducerIterativeDefault_cfi.TrackProducer.clone(
+lowPtTripletStepTracks = RecoTracker.TrackProducer.TrackProducerIterativeDefault_cfi.TrackProducerIterativeDefault.clone(
     src           = 'lowPtTripletStepTrackCandidates',
     AlgorithmName = 'lowPtTripletStep',
     Fitter        = 'FlexibleKFFittingSmoother'
@@ -312,6 +311,10 @@ trackingPhase1.toReplaceWith(lowPtTripletStep, lowPtTripletStep.clone(
      mva         = dict(GBRForestLabel = 'MVASelectorLowPtTripletStep_Phase1'),
      qualityCuts = [-0.4,0.0,0.3],
 ))
+pp_on_AA.toModify(lowPtTripletStep, 
+        mva         = dict(GBRForestLabel = 'HIMVASelectorLowPtTripletStep_Phase1'),
+        qualityCuts = [-0.8, -0.4, 0.5],
+)
 
 from RecoTracker.FinalTrackSelectors.trackTfClassifier_cfi import *
 from RecoTracker.FinalTrackSelectors.trackSelectionTf_cfi import *
@@ -321,14 +324,13 @@ trackdnn.toReplaceWith(lowPtTripletStep, trackTfClassifier.clone(
     qualityCuts = qualityCutDictionary.LowPtTripletStep.value()
 ))
 highBetaStar_2018.toModify(lowPtTripletStep,qualityCuts = [-0.7,-0.3,-0.1])
-pp_on_AA.toModify(lowPtTripletStep, 
-        mva         = dict(GBRForestLabel = 'HIMVASelectorLowPtTripletStep_Phase1'),
-        qualityCuts = [-0.8, -0.4, 0.5],
-)
+
 fastSim.toModify(lowPtTripletStep, vertices = 'firstStepPrimaryVerticesBeforeMixing')
 
 ((~trackingMkFitLowPtTripletStep) & trackdnn).toModify(lowPtTripletStep, mva = dict(tfDnnLabel  = 'trackSelectionTf_CKF'),
                                                     qualityCuts = [-0.23,  0.15,  0.41])
+
+(pp_on_AA & trackdnn).toModify(lowPtTripletStep, qualityCuts =  [-0.29, 0.65, 0.98] )
 
 # For LowPU and Phase2PU140
 import RecoTracker.FinalTrackSelectors.multiTrackSelector_cfi

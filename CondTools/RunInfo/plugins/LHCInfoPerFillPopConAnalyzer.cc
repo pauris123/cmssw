@@ -3,6 +3,7 @@
 #include "CondCore/PopCon/interface/PopConSourceHandler.h"
 #include "CondFormats/Common/interface/TimeConversions.h"
 #include "CondFormats/RunInfo/interface/LHCInfoPerFill.h"
+#include "CondTools/RunInfo/interface/LumiSectionFilter.h"
 #include "CondTools/RunInfo/interface/OMSAccess.h"
 #include "CoralBase/Attribute.h"
 #include "CoralBase/AttributeList.h"
@@ -12,7 +13,6 @@
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ParameterSet/interface/ParameterSetfwd.h"
-#include "LumiSectionFilter.h"
 #include "RelationalAccess/ICursor.h"
 #include "RelationalAccess/IQuery.h"
 #include "RelationalAccess/ISchema.h"
@@ -98,7 +98,9 @@ namespace theLHCInfoPerFillImpl {
       auto energy = row.get<float>("energy");
       auto creationTime = row.get<boost::posix_time::ptime>("start_time");
       auto stableBeamStartTime = row.get<boost::posix_time::ptime>("start_stable_beam");
-      auto beamDumpTime = row.get<boost::posix_time::ptime>("end_time");
+      std::string endTimeStr = row.get<std::string>("end_time");
+      auto beamDumpTime =
+          (endTimeStr == "null") ? 0 : cond::time::from_boost(row.get<boost::posix_time::ptime>("end_time"));
       auto injectionScheme = row.get<std::string>("injection_scheme");
       targetPayload = std::make_unique<LHCInfoPerFill>();
       targetPayload->setFillNumber(currentFill);
@@ -114,7 +116,7 @@ namespace theLHCInfoPerFillImpl {
       targetPayload->setEnergy(energy);
       targetPayload->setCreationTime(cond::time::from_boost(creationTime));
       targetPayload->setBeginTime(cond::time::from_boost(stableBeamStartTime));
-      targetPayload->setEndTime(cond::time::from_boost(beamDumpTime));
+      targetPayload->setEndTime(beamDumpTime);
       targetPayload->setInjectionScheme(injectionScheme);
       ret = true;
     }
@@ -164,8 +166,8 @@ namespace theLHCInfoPerFillImpl {
   bool comparePayloads(const LHCInfoPerFill& rhs, const LHCInfoPerFill& lhs) {
     if (rhs.fillNumber() != lhs.fillNumber() || rhs.delivLumi() != lhs.delivLumi() || rhs.recLumi() != lhs.recLumi() ||
         rhs.instLumi() != lhs.instLumi() || rhs.instLumiError() != lhs.instLumiError() ||
-        rhs.lhcState() != rhs.lhcState() || rhs.lhcComment() != rhs.lhcComment() ||
-        rhs.ctppsStatus() != rhs.ctppsStatus()) {
+        rhs.lhcState() != lhs.lhcState() || rhs.lhcComment() != lhs.lhcComment() ||
+        rhs.ctppsStatus() != lhs.ctppsStatus()) {
       return false;
     }
     return true;
@@ -354,7 +356,7 @@ public:
           boost::posix_time::ptime flumiStop = cond::time::to_boost(m_tmpBuffer.back().first);
           edm::LogInfo(m_name) << "First lumi starts at " << flumiStart << " last lumi starts at " << flumiStop;
           session.transaction().start(true);
-          getCTTPSData(session, startSampleTime, endSampleTime);
+          getCTPPSData(session, startSampleTime, endSampleTime);
           session.transaction().commit();
           session2.transaction().start(true);
           getEcalData(session2, startSampleTime, endSampleTime, updateEcal);
@@ -418,7 +420,6 @@ private:
     query->filterEQ("beams_stable", "true");
     query->limit(kLumisectionsQueryLimit);
     if (query->execute()) {
-      int nLumi = 0;
       auto queryResult = query->result();
       edm::LogInfo(m_name) << "Found " << queryResult.size() << " lumisections with STABLE BEAM during the fill "
                            << fillId;
@@ -427,12 +428,10 @@ private:
         if (m_endFillMode) {
           auto firstRow = queryResult.front();
           addPayloadToBuffer(firstRow);
-          nLumi++;
         }
 
         auto lastRow = queryResult.back();
         addPayloadToBuffer(lastRow);
-        nLumi++;
       }
     }
     return 0;
@@ -500,7 +499,7 @@ private:
     }
   }
 
-  bool getCTTPSData(cond::persistency::Session& session,
+  bool getCTPPSData(cond::persistency::Session& session,
                     const boost::posix_time::ptime& beginFillTime,
                     const boost::posix_time::ptime& endFillTime) {
     //run the fifth query against the CTPPS schema

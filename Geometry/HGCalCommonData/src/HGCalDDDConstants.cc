@@ -546,6 +546,10 @@ std::pair<double, double> HGCalDDDConstants::getXY(int layer, double x, double y
   return std::make_pair(x0, y0);
 }
 
+double HGCalDDDConstants::guardRingOffset(bool reco) const {
+  return (reco ? hgpar_->guardRingOffset_ : HGCalParameters::k_ScaleToDDD * hgpar_->guardRingOffset_);
+}
+
 bool HGCalDDDConstants::isHalfCell(int waferType, int cell) const {
   if (waferType < 1 || cell < 0)
     return false;
@@ -1246,6 +1250,10 @@ std::pair<int, int> HGCalDDDConstants::rowColumnWafer(int wafer) const {
   return std::make_pair(row, col);
 }
 
+double HGCalDDDConstants::sensorSizeOffset(bool reco) const {
+  return (reco ? hgpar_->sensorSizeOffset_ : HGCalParameters::k_ScaleToDDD * hgpar_->sensorSizeOffset_);
+}
+
 std::pair<int, int> HGCalDDDConstants::simToReco(int cell, int lay, int mod, bool half) const {
   if (!waferHexagon6()) {
     return std::make_pair(cell, lay);
@@ -1468,7 +1476,7 @@ void HGCalDDDConstants::waferFromPosition(const double x,
   }
   if (debug)
     edm::LogVerbatim("HGCalGeom") << "waferFromPosition:: Layer " << layer << ":" << ll << " Rot " << rotx << " X " << x
-                                  << ":" << xx << " Y " << y << ":" << yy;
+                                  << ":" << xx << " Y " << y << ":" << yy << " side " << zside << " extend " << extend;
   double rmax = extend ? rmaxT_ : rmax_;
   double hexside = extend ? hexsideT_ : hexside_;
   for (unsigned int k = 0; k < hgpar_->waferPosX_.size(); ++k) {

@@ -4,14 +4,8 @@ import argparse
 import sys
 
 parser = argparse.ArgumentParser(prog=sys.argv[0], description='Test getting many DataProducts just by type.')
-parser.add_argument("--useConsumesMany", action="store_true", help="use consumesMany instead of GetterOfProducts")
 parser.add_argument("--useEDAlias", action="store_true", help="add an EDAlias for one of the modules")
-
-argv = sys.argv[:]
-if '--' in argv:
-    argv.remove("--")
-args, unknown = parser.parse_known_args(argv)
-
+args = parser.parse_args()
 
 process = cms.Process("TEST")
 
@@ -27,11 +21,7 @@ if args.useEDAlias:
     process.d = cms.EDAlias(a = cms.VPSet(cms.PSet(type = cms.string('*'))))
     print("turned on useEDAlias")
 
-useConsumesMany = False
-if args.useConsumesMany:
-    useConsumesMany = True
-    print("turned on useConsumesMany")
-process.add = cms.EDProducer("AddAllIntsProducer", useConsumesMany = cms.untracked.bool(useConsumesMany))
+process.add = cms.EDProducer("AddAllIntsProducer")
 
 process.test = cms.EDAnalyzer("BuiltinIntTestAnalyzer",
                               valueMustMatch = cms.untracked.int32(111),

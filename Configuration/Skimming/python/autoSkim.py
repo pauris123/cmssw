@@ -5,8 +5,8 @@ autoSkim = {
  'DisplacedJet' : 'EXODisplacedJet+EXODelayedJet+EXODTCluster+EXOLLPJetHCAL+LogError+LogErrorMonitor',
  'JetMET0' : 'JetHTJetPlusHOFilter+EXOHighMET+EXODelayedJetMET+EXODisappTrk+LogError+LogErrorMonitor',
  'JetMET1' : 'JetHTJetPlusHOFilter+EXOHighMET+EXODelayedJetMET+EXODisappTrk+LogError+LogErrorMonitor',
- 'EGamma0':'ZElectron+WElectron+EXOMONOPOLE+EXODisappTrk+LogError+LogErrorMonitor',
- 'EGamma1':'ZElectron+WElectron+EXOMONOPOLE+EXODisappTrk+LogError+LogErrorMonitor',
+ 'EGamma0':'ZElectron+WElectron+EXOMONOPOLE+EXODisappTrk+IsoPhotonEB+LogError+LogErrorMonitor',
+ 'EGamma1':'ZElectron+WElectron+EXOMONOPOLE+EXODisappTrk+IsoPhotonEB+LogError+LogErrorMonitor',
  'Tau' : 'EXODisappTrk+LogError+LogErrorMonitor',
  'Muon0' : 'ZMu+EXODisappTrk+EXOCSCCluster+EXODisappMuon+LogError+LogErrorMonitor',
  'Muon1' : 'ZMu+EXODisappTrk+EXOCSCCluster+EXODisappMuon+LogError+LogErrorMonitor',
@@ -17,6 +17,14 @@ autoSkim = {
  'ZeroBias' : 'LogError+LogErrorMonitor',
  'Commissioning' : 'EcalActivity+LogError+LogErrorMonitor',
  'Cosmics':'CosmicSP+CosmicTP+LogError+LogErrorMonitor',
+ 'ParkingDoubleMuonLowMass0': 'ReserveDMu+LogError+LogErrorMonitor',
+ 'ParkingDoubleMuonLowMass1': 'ReserveDMu+LogError+LogErrorMonitor',
+ 'ParkingDoubleMuonLowMass2': 'ReserveDMu+LogError+LogErrorMonitor',
+ 'ParkingDoubleMuonLowMass3': 'ReserveDMu+LogError+LogErrorMonitor',
+ 'ParkingDoubleMuonLowMass4': 'ReserveDMu+LogError+LogErrorMonitor',
+ 'ParkingDoubleMuonLowMass5': 'ReserveDMu+LogError+LogErrorMonitor',
+ 'ParkingDoubleMuonLowMass6': 'ReserveDMu+LogError+LogErrorMonitor',
+ 'ParkingDoubleMuonLowMass7': 'ReserveDMu+LogError+LogErrorMonitor',
 
  # These should be uncommented when 2022 data reprocessing
  # Dedicated skim for 2022
@@ -32,6 +40,10 @@ autoSkim = {
  # Used in unit test scenario ppEra_Run2_2018
  'SingleMuon': 'LogError+LogErrorMonitor',
 }
+
+# For 2023 PbPb skims
+for i_split in range(32):
+    autoSkim[f'HIPhysicsRawPrime{i_split}'] = 'PbPbEMu+PbPbZEE+PbPbZMM+LogError+LogErrorMonitor'
 
 autoSkimRunII = {
  'BTagCSV' : 'LogError+LogErrorMonitor',
