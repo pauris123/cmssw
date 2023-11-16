@@ -9,9 +9,6 @@ BTLDetId BTLDetId::geographicalId(CrysLayout lay) const {
   } else if (lay == CrysLayout::v2) {
     // v2: set number of crystals to 17 to distinguish from crystal BTLDetId
     return BTLDetId(mtdSide(), mtdRR(), runit(), module(), modType(), kCrystalsPerModuleV2 + 1);
-  } else if (lay == CrysLayout::v3) {
-    // v3: set number of crystals to 17 to distinguish from crystal BTLDetId
-    return BTLDetId(mtdSide(), mtdRR(), runit(), module(), 0, kCrystalsPerModuleV2 + 1);
   }
 
   return 0;
@@ -24,6 +21,7 @@ std::ostream& operator<<(std::ostream& os, const BTLDetId& id) {
   os << " BTL " << std::endl
      << " Side        : " << id.mtdSide() << std::endl
      << " Rod         : " << id.mtdRR() << std::endl
+     << " Crystal type: " << id.modType() << std::endl
      << " Readout unit: " << id.runit() << std::endl
      << " Module      : " << id.module() << std::endl
      << " Crystal     : " << id.crystal() << std::endl;
