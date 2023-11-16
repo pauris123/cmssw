@@ -53,7 +53,7 @@ size_t MTDTopology::hshiftETL(const uint32_t detid, const int horizontalShift) c
 
   for (size_t iloop = 0; iloop < etlVals_[discside].start_copy_[iHome].size() - 1; iloop++) {
     if (geomDetIndex >= etlVals_[discside].start_copy_[iHome][iloop] &&
-      geomDetIndex < etlVals_[discside].start_copy_[iHome][iloop + 1]) {
+        geomDetIndex < etlVals_[discside].start_copy_[iHome][iloop + 1]) {
       if (geomDetIndex + hsh >= etlVals_[discside].start_copy_[iHome][iloop] &&
           geomDetIndex + hsh < etlVals_[discside].start_copy_[iHome][iloop + 1]) {
         return geomDetIndex + hsh - 1 + nmodOffset;

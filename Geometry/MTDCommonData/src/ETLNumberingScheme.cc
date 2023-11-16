@@ -38,7 +38,9 @@ uint32_t ETLNumberingScheme::getUnitID(const MTDBaseNumber& baseNumber) const {
 
   const uint32_t modCopy(baseNumber.getCopyNumber(2));
   uint32_t sensor = 0;
-  if (!prev8) { sensor = baseNumber.getCopyNumber(1); }
+  if (!prev8) {
+    sensor = baseNumber.getCopyNumber(1);
+  }
 
   const std::string_view& ringName(baseNumber.getLevelName(3));  // name of ring volume
   int modtyp(0);
@@ -117,7 +119,7 @@ uint32_t ETLNumberingScheme::getUnitID(const MTDBaseNumber& baseNumber) const {
                             << " ring = " << ringCopy << " zside = " << zside << " module = " << modCopy
                             << " modtyp = " << modtyp << " Raw Id = " << intindex;
 #endif
-  
+
     ETLDetId altETLdetid(zside, discN, sectorS, sectorN, modCopy, modtyp);
     altintindex = altETLdetid.rawId();
 
@@ -127,13 +129,11 @@ uint32_t ETLNumberingScheme::getUnitID(const MTDBaseNumber& baseNumber) const {
 #ifdef EDM_ML_DEBUG
     edm::LogInfo("MTDGeom") << "ETL Numbering scheme: "
                             << " ring = " << ringCopy << " zside = " << zside << " module = " << modCopy
-                            << " modtyp = " << modtyp << " sensor = " << sensor 
-                            << " Raw Id = " << intindex;
+                            << " modtyp = " << modtyp << " sensor = " << sensor << " Raw Id = " << intindex;
 #endif
-  
+
     ETLDetId altETLdetid(zside, discN, sectorS, sectorN, modCopy, modtyp, sensor);
     altintindex = altETLdetid.rawId();
-
   }
 
   if (intindex != altintindex) {

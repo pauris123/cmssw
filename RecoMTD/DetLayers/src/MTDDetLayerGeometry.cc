@@ -75,7 +75,7 @@ void MTDDetLayerGeometry::addBTLLayers(const vector<DetLayer*>& dtlayers) {
 DetId MTDDetLayerGeometry::makeDetLayerId(const DetLayer* detLayer) const {
   if (detLayer->subDetector() == GeomDetEnumerators::TimingEndcap) {
     ETLDetId id(detLayer->basicComponents().front()->geographicalId().rawId());
-    return ETLDetId(id.mtdSide(), 0, 0, 0, 0); // Constructor of new geometry is compatible with prev8
+    return ETLDetId(id.mtdSide(), 0, 0, 0, 0);  // Constructor of new geometry is compatible with prev8
   } else if (detLayer->subDetector() == GeomDetEnumerators::TimingBarrel) {
     BTLDetId id(detLayer->basicComponents().front()->geographicalId().rawId());
     return BTLDetId(id.mtdSide(), 0, 0, 0, 0);

@@ -93,8 +93,7 @@ public:
       : MTDDetId(DetId::Forward, ForwardSubdetector::FastTime) {
     id_ |= (MTDType::ETL & kMTDsubdMask) << kMTDsubdOffset | (zside & kZsideMask) << kZsideOffset |
            (ring & kRodRingMask) << kRodRingOffset | (module & kETLmoduleMask) << kETLmoduleOffset |
-           (modtyp & kETLmodTypeMask) << kETLmodTypeOffset |
-           (sensor & kETLsensorMask) << kETLsensorOffset;
+           (modtyp & kETLmodTypeMask) << kETLmodTypeOffset | (sensor & kETLsensorMask) << kETLsensorOffset;
     id_ |= kETLformatV2;
   }
 
@@ -113,7 +112,13 @@ public:
     id_ |= kETLformatV2;
   }
   // v8
-  ETLDetId(uint32_t zside, uint32_t disc, uint32_t discside, uint32_t sector, uint32_t module, uint32_t modtyp, uint32_t sensor)
+  ETLDetId(uint32_t zside,
+           uint32_t disc,
+           uint32_t discside,
+           uint32_t sector,
+           uint32_t module,
+           uint32_t modtyp,
+           uint32_t sensor)
       : MTDDetId(DetId::Forward, ForwardSubdetector::FastTime) {
     id_ |= (MTDType::ETL & kMTDsubdMask) << kMTDsubdOffset | (zside & kZsideMask) << kZsideOffset |
            (encodeSector(disc, discside, sector) & kRodRingMask) << kRodRingOffset |

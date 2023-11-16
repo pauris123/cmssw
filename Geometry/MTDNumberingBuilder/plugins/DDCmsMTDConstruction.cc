@@ -26,8 +26,8 @@ public:
   void veto(const std::string& veto) { veto_.emplace_back(veto); }
 
   bool accept(const DDExpandedView& ev) const final {
-      std::string currentName(ev.logicalPart().name().fullname());
-      for (const auto& test : veto_) {
+    std::string currentName(ev.logicalPart().name().fullname());
+    for (const auto& test : veto_) {
       if (currentName.find(test) != std::string::npos)
         return false;
     }
@@ -278,7 +278,6 @@ std::unique_ptr<GeometricTimingDet> DDCmsMTDConstruction::construct(const cms::D
   } else {
     ETLEndComponent = GeometricTimingDet::ETLSensor;
   }
-
 
   std::vector<GeometricTimingDet*> subdet;
   std::vector<GeometricTimingDet*> layer;
