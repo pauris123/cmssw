@@ -1,4 +1,4 @@
-//#define EDM_ML_DEBUG
+#define EDM_ML_DEBUG
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
@@ -99,7 +99,7 @@ uint32_t BTLNumberingScheme::getUnitID(const MTDBaseNumber& baseNumber) const {
         return 0;
       }
     } else if (baseNumber.getLevelName(0).find("BTLCrystal") != std::string_view::npos) {
-      // v2 scenario
+      // v2 or v3 scenario
 
       crystal = baseNumber.getCopyNumber(0);
       modCopy = baseNumber.getCopyNumber(1);
@@ -116,7 +116,16 @@ uint32_t BTLNumberingScheme::getUnitID(const MTDBaseNumber& baseNumber) const {
         modCopy = negModCopy[modCopy - 1];
       }
 
-      modtyp = ::atoi(&bareBaseName(baseNumber.getLevelName(2)).back());
+      bool isV2(baseNumber.getLevelName(0).size() == 11);
+
+      if (isV2) {
+        // V2: the type is embedded in crystal name
+        modtyp = ::atoi(&bareBaseName(baseNumber.getLevelName(2)).back());
+      } else {
+        // V3: build type and RU number per type from global RU number
+        modtyp = (runitCopy + 1) / BTLDetId::kRUPerTypeV2;
+        runitCopy = runitCopy % BTLDetId::kRUPerTypeV2 + 1;
+      }
 
       // error checking
 
@@ -191,7 +200,16 @@ uint32_t BTLNumberingScheme::getUnitID(const MTDBaseNumber& baseNumber) const {
       modCopy = negModCopy[modCopy - 1];
     }
 
-    modtyp = ::atoi(&bareBaseName(baseNumber.getLevelName(1)).back());
+    bool isV2(baseNumber.getLevelName(0).size() == 10);
+
+    if (isV2) {
+      // V2: the type is embedded in crystal name
+      modtyp = ::atoi(&bareBaseName(baseNumber.getLevelName(1)).back());
+    } else {
+      // V3: build type and RU number per type from global RU number
+      modtyp = (runitCopy + 1) / BTLDetId::kRUPerTypeV2;
+      runitCopy = runitCopy % BTLDetId::kRUPerTypeV2 + 1;
+    }
 
     // error checking
 

@@ -23,6 +23,7 @@ std::ostream& operator<<(std::ostream& os, const BTLDetId& id) {
      << " Rod         : " << id.mtdRR() << std::endl
      << " Crystal type: " << id.modType() << std::endl
      << " Readout unit: " << id.runit() << std::endl
+     << " Global RU   : " << id.globalRunit() << std::endl
      << " Module      : " << id.module() << std::endl
      << " Crystal     : " << id.crystal() << std::endl;
   return os;

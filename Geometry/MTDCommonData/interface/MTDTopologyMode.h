@@ -34,7 +34,7 @@ namespace MTDTopologyMode {
       return static_cast<BTLDetId::CrysLayout>(topoMode);
     } else if (topoMode < static_cast<int>(Mode::btlv2etlv5)) {
       return BTLDetId::CrysLayout::barphiflat;
-    } else if (topoMode == static_cast<int>(Mode::btlv2etlv5)){
+    } else if (topoMode == static_cast<int>(Mode::btlv2etlv5)) {
       return BTLDetId::CrysLayout::v2;
     } else {
       return BTLDetId::CrysLayout::v3;
