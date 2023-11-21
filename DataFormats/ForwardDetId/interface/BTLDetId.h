@@ -93,7 +93,7 @@ public:
   inline int globalRunit() const {
     if (runit() == 0) {
       // pre-V2: build a RU identifier from available information
-      return (modType() - 1) * kRUPerTypeV2 + (module() - 1) / kModulePerTypeBarPhiFlat / kRUPerTypeV2 + 1;
+      return (module() - 1) / kModulePerTypeBarPhiFlat / kRUPerTypeV2 + 1;
     } else if (runit() > 0 && modType() > 0) {
       // V2/V3: build global RU identifier from RU per type and type
       return (modType() - 1) * kRUPerTypeV2 + runit();

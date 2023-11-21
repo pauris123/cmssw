@@ -497,22 +497,22 @@
       <rChild name="btl:ReadoutUnit"/>
       <Translation x="0.0*mm" y="0.0*mm" z="-620.25*mm"/>
     </PosPart>
-    <PosPart copyNumber="1">
+    <PosPart copyNumber="3">
       <rParent name="btl:TrayZpos"/>
       <rChild name="btl:ReadoutUnit"/>
       <Translation x="0.0*mm" y="0.0*mm" z="-206.75*mm"/>
     </PosPart>
-    <PosPart copyNumber="2">
+    <PosPart copyNumber="4">
       <rParent name="btl:TrayZpos"/>
       <rChild name="btl:ReadoutUnit"/>
       <Translation x="0.0*mm" y="0.0*mm" z="206.75*mm"/>
     </PosPart>
-    <PosPart copyNumber="1">
+    <PosPart copyNumber="5">
       <rParent name="btl:TrayZpos"/>
       <rChild name="btl:ReadoutUnit"/>
       <Translation x="0.0*mm" y="0.0*mm" z="620.25*mm"/>
     </PosPart>
-    <PosPart copyNumber="2">
+    <PosPart copyNumber="6">
       <rParent name="btl:TrayZpos"/>
       <rChild name="btl:ReadoutUnit"/>
       <Translation x="0.0*mm" y="0.0*mm" z="1033.75*mm"/>
@@ -529,25 +529,25 @@
       <rRotation name="rotations:180D"/>
       <Translation x="0.0*mm" y="0.0*mm" z="620.25*mm"/>
     </PosPart>
-    <PosPart copyNumber="1">
+    <PosPart copyNumber="3">
       <rParent name="btl:TrayZneg"/>
       <rChild name="btl:ReadoutUnit"/>
       <rRotation name="rotations:180D"/>
       <Translation x="0.0*mm" y="0.0*mm" z="206.75*mm"/>
     </PosPart>
-    <PosPart copyNumber="2">
+    <PosPart copyNumber="4">
       <rParent name="btl:TrayZneg"/>
       <rChild name="btl:ReadoutUnit"/>
       <rRotation name="rotations:180D"/>
       <Translation x="0.0*mm" y="0.0*mm" z="-206.75*mm"/>
     </PosPart>
-    <PosPart copyNumber="1">
+    <PosPart copyNumber="5">
       <rParent name="btl:TrayZneg"/>
       <rChild name="btl:ReadoutUnit"/>
       <rRotation name="rotations:180D"/>
       <Translation x="0.0*mm" y="0.0*mm" z="-620.25*mm"/>
     </PosPart>
-    <PosPart copyNumber="2">
+    <PosPart copyNumber="6">
       <rParent name="btl:TrayZneg"/>
       <rChild name="btl:ReadoutUnit"/>
       <rRotation name="rotations:180D"/>
