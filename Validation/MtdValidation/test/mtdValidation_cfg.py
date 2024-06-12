@@ -30,14 +30,29 @@ process.MessageLogger.cerr.FwkReport  = cms.untracked.PSet(
     reportEvery = cms.untracked.int32(10),
 )
 
+# process.source = cms.Source("PoolSource",
+#     fileNames = cms.untracked.vstring(
+#         'file:step3.root'
+#     )
+# )
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring(
-        'file:step3.root'
-    )
+    fileNames = cms.untracked.vstring('/store/relval/CMSSW_14_1_0_pre2/RelValTTbar_14TeV/GEN-SIM-RECO/PU_140X_mcRun4_realistic_v3_STD_2026D98_PU-v2/2580000/fc9e3421-88dd-4283-be75-33d3afef365e.root')
 )
 
 process.mix.digitizers = cms.PSet()
 for a in process.aliases: delattr(process, a)
+
+#--- Cluster associations maps producers
+process.load('SimFastTiming.MtdAssociatorProducers.mtdRecoClusterToSimLayerClusterAssociatorByHits_cfi')
+process.load('SimFastTiming.MtdAssociatorProducers.mtdRecoClusterToSimLayerClusterAssociation_cfi')
+process.load('SimFastTiming.MtdAssociatorProducers.mtdSimLayerClusterToTPAssociatorByTrackId_cfi')
+process.load('SimFastTiming.MtdAssociatorProducers.mtdSimLayerClusterToTPAssociation_cfi')
+clusterAssociationProducers = cms.Sequence(
+    process.mtdRecoClusterToSimLayerClusterAssociatorByHits +
+    process.mtdRecoClusterToSimLayerClusterAssociation +
+    process.mtdSimLayerClusterToTPAssociatorByTrackId +
+    process.mtdSimLayerClusterToTPAssociation
+)
 
 # --- BTL Validation
 process.load("Validation.MtdValidation.btlSimHitsValid_cfi")
@@ -63,7 +78,9 @@ process.load("Validation.MtdValidation.vertices4DValid_cfi")
 # process.mtdTracksValid.optionalPlots = True
 # process.vertices4DValid.optionalPlots = True
 
-process.validation = cms.Sequence(btlValidation + etlValidation + process.mtdTracksValid + process.mtdEleIsoValid + process.vertices4DValid)
+#process.validation = cms.Sequence(btlValidation + etlValidation + process.mtdTracksValid + process.mtdEleIsoValid + process.vertices4DValid)
+process.validation = cms.Sequence(clusterAssociationProducers + btlValidation + etlValidation + process.mtdTracksValid + process.mtdEleIsoValid + process.vertices4DValid) # Added cluster association stuff
+
 
 process.DQMoutput = cms.OutputModule("DQMRootOutputModule",
     dataset = cms.untracked.PSet(
@@ -74,6 +91,9 @@ process.DQMoutput = cms.OutputModule("DQMRootOutputModule",
     outputCommands = process.DQMEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0)
 )
+
+process.TFileService = cms.Service("TFileService", fileName=cms.string("file:BDT_tree.root")) # added for BDT tree output
+
 
 process.p = cms.Path( process.mix + process.mtdTrackingRecHits + process.validation )
 process.endjob_step = cms.EndPath(process.endOfProcess)
