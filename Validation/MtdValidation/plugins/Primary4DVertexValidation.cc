@@ -461,6 +461,13 @@ private:
   MonitorElement* meTrackPullLowPTot_;
   MonitorElement* meTrackPullHighPTot_;
 
+  MonitorElement* meMtdQualMVAsig_;
+  MonitorElement* meMtdQualMVApu_;
+  MonitorElement* meTrackResMvaSig_[3];
+  MonitorElement* meTrackResMvaPU_[3];
+  MonitorElement* meTrackPullMvaSig_[3];
+  MonitorElement* meTrackPullMvaPU_[3];
+
   MonitorElement* meTrackResLowP_[3];
   MonitorElement* meTrackResHighP_[3];
   MonitorElement* meTrackPullLowP_[3];
@@ -558,6 +565,10 @@ void Primary4DVertexValidation::bookHistograms(DQMStore::IBooker& ibook,
   // --- histograms booking
   meMVATrackEffPtTot_ = ibook.book1D("MVAEffPtTot", "Pt of tracks associated to LV; track pt [GeV] ", 110, 0., 11.);
   meMVATrackEffEtaTot_ = ibook.book1D("MVAEffEtaTot", "Eta of tracks associated to LV; track eta ", 66, 0., 3.3);
+  meMtdQualMVAsig_ =
+      ibook.book1D("MtdQualMvaSig", "MtdMVAQual score of tracks associated to LV and matched to TP; track MtdQualMVA ", 100, -1, 1);
+  meMtdQualMVApu_ =
+      ibook.book1D("MtdQualMvaPU", "MtdMVAQual score of other tracks not associated to LV and not matched to TP; track MtdQualMVA ", 100, -1, 1);
   meMVATrackMatchedEffPtTot_ =
       ibook.book1D("MVAMatchedEffPtTot", "Pt of tracks associated to LV matched to TP; track pt [GeV] ", 110, 0., 11.);
   meMVATrackMatchedEffPtMtd_ = ibook.book1D(
@@ -575,6 +586,18 @@ void Primary4DVertexValidation::bookHistograms(DQMStore::IBooker& ibook,
       "TrackRes-MediumMVA", "t_{rec} - t_{sim} for tracks with 0.5 < MVA < 0.8; t_{rec} - t_{sim} [ns] ", 100, -1., 1.);
   meTrackRes_[2] = ibook.book1D(
       "TrackRes-HighMVA", "t_{rec} - t_{sim} for tracks with MVA > 0.8; t_{rec} - t_{sim} [ns] ", 100, -1., 1.);
+  meTrackResMvaSig_[0] = ibook.book1D(
+      "TrackRes-LowMVA", "t_{rec} - t_{sim} for tracks associated to LV matched to TP with MVA < 0.5; t_{rec} - t_{sim} [ns] ", 100, -1., 1.);
+  meTrackResMvaSig_[1] = ibook.book1D(
+      "TrackRes-MediumMVA", "t_{rec} - t_{sim} for tracks associated to LV matched to TP with 0.5 < MVA < 0.8; t_{rec} - t_{sim} [ns] ", 100, -1., 1.);
+  meTrackResMvaSig_[2] = ibook.book1D(
+      "TrackRes-HighMVA", "t_{rec} - t_{sim} for tracks associated to LV matched to TP with MVA > 0.8; t_{rec} - t_{sim} [ns] ", 100, -1., 1.);
+  meTrackResMvaPU_[0] = ibook.book1D(
+      "TrackRes-LowMVA", "t_{rec} - t_{sim} for tracks not associated to LV and not matched to TP with MVA < 0.5; t_{rec} - t_{sim} [ns] ", 100, -1., 1.);
+  meTrackResMvaPU_[1] = ibook.book1D(
+      "TrackRes-MediumMVA", "t_{rec} - t_{sim} for tracks not associated to LV and not matched to TP with 0.5 < MVA < 0.8; t_{rec} - t_{sim} [ns] ", 100, -1., 1.);
+  meTrackResMvaPU_[2] = ibook.book1D(
+      "TrackRes-HighMVA", "t_{rec} - t_{sim} for tracks not associated to LV and not matched to TP with MVA > 0.8; t_{rec} - t_{sim} [ns] ", 100, -1., 1.);
   if (optionalPlots_) {
     meTrackResMass_[0] = ibook.book1D(
         "TrackResMass-LowMVA", "t_{rec} - t_{est} for tracks with MVA < 0.5; t_{rec} - t_{est} [ns] ", 100, -1., 1.);
@@ -607,6 +630,18 @@ void Primary4DVertexValidation::bookHistograms(DQMStore::IBooker& ibook,
       "TrackPull-MediumMVA", "Pull for tracks with 0.5 < MVA < 0.8; (t_{rec}-t_{sim})/#sigma_{t}", 100, -10., 10.);
   meTrackPull_[2] =
       ibook.book1D("TrackPull-HighMVA", "Pull for tracks with MVA > 0.8; (t_{rec}-t_{sim})/#sigma_{t}", 100, -10., 10.);
+  meTrackPullMvaSig_[0] =
+      ibook.book1D("TrackPull-LowMVA", "Pull for tracks associated to LV matched to TP with MVA < 0.5; (t_{rec}-t_{sim})/#sigma_{t}", 100, -10., 10.);
+  meTrackPullMvaSig_[1] = ibook.book1D(
+      "TrackPull-MediumMVA", "Pull for tracks associated to LV matched to TP with 0.5 < MVA < 0.8; (t_{rec}-t_{sim})/#sigma_{t}", 100, -10., 10.);
+  meTrackPullMvaSig_[2] =
+      ibook.book1D("TrackPull-HighMVA", "Pull for tracks associated to LV matched to TP with MVA > 0.8; (t_{rec}-t_{sim})/#sigma_{t}", 100, -10., 10.);
+  meTrackPullMvaPU_[0] =
+      ibook.book1D("TrackPull-LowMVA", "Pull for tracks not associated to LV and not matched to TP with MVA < 0.5; (t_{rec}-t_{sim})/#sigma_{t}", 100, -10., 10.);
+  meTrackPullMvaPU_[1] = ibook.book1D(
+      "TrackPull-MediumMVA", "Pull for tracks not associated to LV and not matched to TP with 0.5 < MVA < 0.8; (t_{rec}-t_{sim})/#sigma_{t}", 100, -10., 10.);
+  meTrackPullMvaPU_[2] =
+      ibook.book1D("TrackPull-HighMVA", "Pull for tracks not associated to LV and not matched to TP with MVA > 0.8; (t_{rec}-t_{sim})/#sigma_{t}", 100, -10., 10.);
   meMVATrackZposResTot_ = ibook.book1D(
       "MVATrackZposResTot", "Z_{PCA} - Z_{sim} for tracks from LV MVA sel.;Z_{PCA} - Z_{sim} [cm] ", 50, -0.1, 0.1);
   meTrackZposResTot_ =
@@ -2114,6 +2149,13 @@ void Primary4DVertexValidation::analyze(const edm::Event& iEvent, const edm::Eve
               meMVATrackMatchedEffEtaTot_->Fill(std::abs((*iTrack)->eta()));
             }
 
+            // Checking the mtdQualMVA score for two populations of tracks
+            if (selectedLVMatching && selectTP){
+              meMtdQualMVAsig_->Fill(mtdQualMVA[(*iTrack)]);
+            } else{
+              meMtdQualMVApu_->Fill(mtdQualMVA[(*iTrack)]);
+            }
+
             if (sigmat0Safe[*iTrack] == -1)
               continue;
 
@@ -2257,6 +2299,14 @@ void Primary4DVertexValidation::analyze(const edm::Event& iEvent, const edm::Eve
               meTrackRes_[0]->Fill(t0Safe[*iTrack] - tsim);
               meTrackPull_[0]->Fill((t0Safe[*iTrack] - tsim) / sigmat0Safe[*iTrack]);
 
+              if (selectedLVMatching && selectTP){
+                meTrackResMvaSig_[0]->Fill(t0Safe[*iTrack] - tsim);
+                meTrackPullMvaSig_[0]->Fill((t0Safe[*iTrack] - tsim) / sigmat0Safe[*iTrack]);
+              } else{
+                meTrackResMvaPU_[0]->Fill(t0Safe[*iTrack] - tsim);
+                meTrackPullMvaPU_[0]->Fill((t0Safe[*iTrack] - tsim) / sigmat0Safe[*iTrack]);
+              }
+
               if (optionalPlots_) {
                 meTrackResMass_[0]->Fill(t0Safe[*iTrack] - tEst);
                 meTrackResMassTrue_[0]->Fill(tEst - tsim);
@@ -2286,6 +2336,14 @@ void Primary4DVertexValidation::analyze(const edm::Event& iEvent, const edm::Eve
               meTrackRes_[1]->Fill(t0Safe[*iTrack] - tsim);
               meTrackPull_[1]->Fill((t0Safe[*iTrack] - tsim) / sigmat0Safe[*iTrack]);
 
+              if (selectedLVMatching && selectTP){
+                meTrackResMvaSig_[1]->Fill(t0Safe[*iTrack] - tsim);
+                meTrackPullMvaSig_[1]->Fill((t0Safe[*iTrack] - tsim) / sigmat0Safe[*iTrack]);
+              } else{
+                meTrackResMvaPU_[1]->Fill(t0Safe[*iTrack] - tsim);
+                meTrackPullMvaPU_[1]->Fill((t0Safe[*iTrack] - tsim) / sigmat0Safe[*iTrack]);
+              }
+
               if (optionalPlots_) {
                 meTrackResMass_[1]->Fill(t0Safe[*iTrack] - tEst);
                 meTrackResMassTrue_[1]->Fill(tEst - tsim);
@@ -2314,6 +2372,14 @@ void Primary4DVertexValidation::analyze(const edm::Event& iEvent, const edm::Eve
               meTrack3DposRes_[2]->Fill(d3D);
               meTrackRes_[2]->Fill(t0Safe[*iTrack] - tsim);
               meTrackPull_[2]->Fill((t0Safe[*iTrack] - tsim) / sigmat0Safe[*iTrack]);
+
+              if (selectedLVMatching && selectTP){
+                meTrackResMvaSig_[2]->Fill(t0Safe[*iTrack] - tsim);
+                meTrackPullMvaSig_[2]->Fill((t0Safe[*iTrack] - tsim) / sigmat0Safe[*iTrack]);
+              } else{
+                meTrackResMvaPU_[2]->Fill(t0Safe[*iTrack] - tsim);
+                meTrackPullMvaPU_[2]->Fill((t0Safe[*iTrack] - tsim) / sigmat0Safe[*iTrack]);
+              }
 
               if (optionalPlots_) {
                 meTrackResMass_[2]->Fill(t0Safe[*iTrack] - tEst);
