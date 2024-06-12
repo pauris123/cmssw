@@ -1,4 +1,5 @@
 import FWCore.ParameterSet.Config as cms
+import FWCore.Utilities.FileUtils as FileUtils
 
 from Configuration.Eras.Era_Phase2C17I13M9_cff import Phase2C17I13M9
 process = cms.Process('mtdHarvesting',Phase2C17I13M9)
@@ -12,13 +13,20 @@ process.load("Configuration.Geometry.GeometryExtended2026D98Reco_cff")
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
+mylist = FileUtils.loadListFromFile('filenames_update.txt') # input file with file names from grid grid control output
+
 process.MessageLogger.cerr.FwkReport  = cms.untracked.PSet(
     reportEvery = cms.untracked.int32(-1),
 )
 
-# Input source
+# # Input source
+# process.source = cms.Source("DQMRootSource",
+#     fileNames = cms.untracked.vstring('file:step3_inDQM.root')
+# )
+
+# input source, when using grid control - from file with filename list
 process.source = cms.Source("DQMRootSource",
-    fileNames = cms.untracked.vstring('file:step3_inDQM.root')
+    fileNames = cms.untracked.vstring(*mylist)
 )
 
 # Path and EndPath definitions
