@@ -627,28 +627,7 @@ void MtdTracksValidation::analyze(const edm::Event& iEvent, const edm::EventSetu
       if(std::abs(trackGen.eta()) < BDT_track_eta_cut && trackGen.pt() > BDT_track_pt_cut && track_vtx_dz_check < BDT_track_dz_cut){
       
         // Inputs for BDT
-        Ttrack_pt.push_back(trackGen.pt());
-        Ttrack_phi.push_back(trackGen.phi());
-        Ttrack_eta.push_back(trackGen.eta());
-        Ttrack_dz.push_back(std::abs(trackGen.dz(Vtx_chosen.position())));
-        Ttrack_dxy.push_back(std::abs(trackGen.dxy(Vtx_chosen.position())));
-        Ttrack_chi2.push_back(trackGen.chi2());
-        Ttrack_ndof.push_back(trackGen.ndof());
-        Ttrack_nValidHits.push_back(trackGen.numberOfValidHits());
-
-        Ttrack_npixBarrelValidHits.push_back(npixBarrel[trackref]);
-        Ttrack_npixEndcapValidHits.push_back(npixEndcap[trackref]);
-        Ttrack_BTLchi2.push_back(btlMatchChi2[trackref]);
-        Ttrack_BTLtime_chi2.push_back(btlMatchTimeChi2[trackref]);
-        Ttrack_ETLchi2.push_back(etlMatchChi2[trackref]);
-        Ttrack_ETLtime_chi2.push_back(etlMatchTimeChi2[trackref]);
-
-        Ttrack_t0.push_back(t0Src[trackref]);
-        Ttrack_sigmat0.push_back(Sigmat0Src[trackref]);
-        Ttrack_Tmtd.push_back(tMtd[trackref]);
-        Ttrack_sigmaTmtd.push_back(SigmatMtd[trackref]);
-        Ttrack_lenght.push_back(pathLength[trackref]);
-        Ttrack_MtdMVA.push_back(mtdQualMVA[trackref]);
+        
 
         bool good_association = false;
 
@@ -657,6 +636,30 @@ void MtdTracksValidation::analyze(const edm::Event& iEvent, const edm::EventSetu
         if (found != r2s_->end()){
 
           Ttrack_HasTP.push_back(true);
+
+
+          Ttrack_pt.push_back(trackGen.pt());
+          Ttrack_phi.push_back(trackGen.phi());
+          Ttrack_eta.push_back(trackGen.eta());
+          Ttrack_dz.push_back(std::abs(trackGen.dz(Vtx_chosen.position())));
+          Ttrack_dxy.push_back(std::abs(trackGen.dxy(Vtx_chosen.position())));
+          Ttrack_chi2.push_back(trackGen.chi2());
+          Ttrack_ndof.push_back(trackGen.ndof());
+          Ttrack_nValidHits.push_back(trackGen.numberOfValidHits());
+
+          Ttrack_npixBarrelValidHits.push_back(npixBarrel[trackref]);
+          Ttrack_npixEndcapValidHits.push_back(npixEndcap[trackref]);
+          Ttrack_BTLchi2.push_back(btlMatchChi2[trackref]);
+          Ttrack_BTLtime_chi2.push_back(btlMatchTimeChi2[trackref]);
+          Ttrack_ETLchi2.push_back(etlMatchChi2[trackref]);
+          Ttrack_ETLtime_chi2.push_back(etlMatchTimeChi2[trackref]);
+
+          Ttrack_t0.push_back(t0Src[trackref]);
+          Ttrack_sigmat0.push_back(Sigmat0Src[trackref]);
+          Ttrack_Tmtd.push_back(tMtd[trackref]);
+          Ttrack_sigmaTmtd.push_back(SigmatMtd[trackref]);
+          Ttrack_lenght.push_back(pathLength[trackref]);
+          Ttrack_MtdMVA.push_back(mtdQualMVA[trackref]);
 
           const auto& tp = (found->val)[0]; // almost all tracks have just one TP, a few have 2.  (can scan through with "for(const auto& tp : found->val)")
           
@@ -709,110 +712,198 @@ void MtdTracksValidation::analyze(const edm::Event& iEvent, const edm::EventSetu
                   //MTD_hit = true;
                   Ttrack_hitMTD.push_back(true);
 
-                  for (const auto& MtdHits : *mtdTrkHitHandle){ // Matching recHit to MTDtrackingRecHit
-                    if (good_association || recH_to_Mtdhit_match)
-                      break;
-                    //if (MTDDetId(hits.id()).mtdSubDetector() == MTDDetId::MTDType::BTL)
-                    //if (MTDDetId(MtdHits.id()).mtdSubDetector() == 1  || MTDDetId(MtdHits.id()).mtdSubDetector() == 2){
-                    for (const auto& MtdHit : MtdHits){
-                      if (good_association || recH_to_Mtdhit_match)
+                  const MTDTrackingRecHit* mtdhit1 = static_cast<const MTDTrackingRecHit*>(hit); // Why I can't I access the mtdcluster info directly from TrackingRecHit?
+                  const FTLCluster& hit_cluster_check = mtdhit1->mtdCluster();
+
+                  if (abs(track.eta()) < 1.5){ // Should be a BTL cluster
+                    for (const auto& DetSetCluBTL : *btlRecCluHandle) { // BTL check
+                      if (good_association)
                         break;
-                      //if(MtdHit.localPosition().x() == hit->localPosition().x() && MtdHit.localPosition().y() == hit->localPosition().y() && MtdHit.localPosition().z() == hit->localPosition().z()){ // Check .globalPosition()
-                      if( (MtdHit.localPosition().x() == hit->localPosition().x()) && (MtdHit.localPosition().y() == hit->localPosition().y()) && (MtdHit.localPosition().z() == hit->localPosition().z()) ){ // Check .localPosition() // Matching condition for recHit to MTDtrackingRecHit
-                        recH_to_Mtdhit_match = true;
-                        Ttrack_hitMatchMTD.push_back(true);
-                        const FTLCluster& hit_cluster = MtdHit.mtdCluster(); // reco cluster linked to MTDtrackingRecHit
+                      for (const auto& clusterBTL : DetSetCluBTL) { // Scan throguh btl reco clusters to find a match
+                        if (good_association)
+                          break;
+                        if(isSameCluster(hit_cluster_check , clusterBTL)){ // find the reco Cluster inside the recoCluster collections
+                          //hit_clust_match_btl = true;
+                          Ttrack_hasRecoClu.push_back(true);
 
-                        if (abs(track.eta()) < 1.5){ // Should be a BTL cluster
-                          for (const auto& DetSetCluBTL : *btlRecCluHandle) { // BTL check
-                            if (good_association)
-                              break;
-                            for (const auto& clusterBTL : DetSetCluBTL) { // Scan throguh btl reco clusters to find a match
-                              if (good_association)
+                          edm::Ref<edmNew::DetSetVector<FTLCluster>, FTLCluster> clusterRefBTL = edmNew::makeRefTo(btlRecCluHandle, &clusterBTL); // get the reference to reco cluster inside the collections
+                          auto itp = r2sAssociationMap.equal_range(clusterRefBTL); // find the linked simCluster
+                          if (itp.first != itp.second) { // find the linked simCluster
+                            std::vector<MtdSimLayerClusterRef> simClustersRefs_RecoMatchBTL = (*itp.first).second;  // the range of itp.first, itp.second should be always 1
+                            Ttrack_RecoSimLink.push_back(true);
+                            
+                            for (unsigned int i = 0; i < simClustersRefs_RecoMatchBTL.size(); i++) {
+                              auto simClusterRef_RecoMatchBTL = simClustersRefs_RecoMatchBTL[i];
+
+                              //Ttrack_CluX1.push_back((*SimCluRefs).x());
+                              //Ttrack_CluX2.push_back((*simClusterRef_RecoMatchBTL).x());
+                              Ttrack_CluTime1.push_back((*SimCluRefs).simLCTime());
+                              Ttrack_CluTime2.push_back((*simClusterRef_RecoMatchBTL).simLCTime());
+                              Ttrack_nSimClust.push_back(i);
+
+                              //if(simClusterRef_RecoMatchBTL == SimCluRefs){
+                              if((*simClusterRef_RecoMatchBTL).simLCTime() == (*SimCluRefs).simLCTime()){ // check if the sim cluster linked to reco cluster is the same as the one linked to TP.
+                                good_association = true;
+                                Ttrack_FullMatch.push_back(true);
                                 break;
-                              if(isSameCluster(hit_cluster , clusterBTL)){ // find the reco Cluster inside the recoCluster collections
-                                //hit_clust_match_btl = true;
-                                Ttrack_hasRecoClu.push_back(true);
+                              }
+                            }
+                          }
+                        }else{
+                          continue;
+                        } // mtd hit matched to btl reco cluster
+                      } // loop through BTL reco clusters
+                    } // loop thorugh set of BTL reco clusters  
+                  }else{ // Should be an ETL cluster
+                    for (const auto& DetSetCluETL : *etlRecCluHandle) { // ETL check
+                      if (good_association)
+                        break;
+                      for (const auto& clusterETL : DetSetCluETL) { // Scan throguh etl reco clusters to find a match
+                        if (good_association)
+                          break; 
+                        if(isSameCluster(hit_cluster_check , clusterETL)){
+                          //hit_clust_match_etl = true;
+                          Ttrack_hasRecoClu.push_back(true);
 
-                                edm::Ref<edmNew::DetSetVector<FTLCluster>, FTLCluster> clusterRefBTL = edmNew::makeRefTo(btlRecCluHandle, &clusterBTL); // get the reference to reco cluster inside the collections
-                                auto itp = r2sAssociationMap.equal_range(clusterRefBTL); // find the linked simCluster
-                                if (itp.first != itp.second) { // find the linked simCluster
-                                  std::vector<MtdSimLayerClusterRef> simClustersRefs_RecoMatchBTL = (*itp.first).second;  // the range of itp.first, itp.second should be always 1
-                                  Ttrack_RecoSimLink.push_back(true);
+                          edm::Ref<edmNew::DetSetVector<FTLCluster>, FTLCluster> clusterRefETL = edmNew::makeRefTo(etlRecCluHandle, &clusterETL);
+                          auto itp = r2sAssociationMap.equal_range(clusterRefETL);
+                          if (itp.first != itp.second) {
+                            std::vector<MtdSimLayerClusterRef> simClustersRefs_RecoMatchETL = (*itp.first).second;  // the range of itp.first, itp.second should be always 1
+                            Ttrack_RecoSimLink.push_back(true);
+                            
+                            for (unsigned int i = 0; i < simClustersRefs_RecoMatchETL.size(); i++) {
+                              auto simClusterRef_RecoMatchETL = simClustersRefs_RecoMatchETL[i];
+
+                              //Ttrack_CluX1.push_back((*SimCluRefs).x());
+                              //Ttrack_CluX2.push_back((*simClusterRef_RecoMatchETL).x());
+                              //Ttrack_CluY1.push_back((*SimCluRefs).y());
+                              //Ttrack_CluY2.push_back((*simClusterRef_RecoMatchETL).y());
+                              Ttrack_CluTime1.push_back((*SimCluRefs).simLCTime());
+                              Ttrack_CluTime2.push_back((*simClusterRef_RecoMatchETL).simLCTime());
+                              Ttrack_nSimClust.push_back(i);
+
+                              //if(simClusterRef_RecoMatchETL == SimCluRefs){
+                              if((*simClusterRef_RecoMatchETL).simLCTime() == (*SimCluRefs).simLCTime()){
+                                good_association = true;
+                                Ttrack_FullMatch.push_back(true);
+                                break;
+                              }
+                            }
+                          }
+                        }else{
+                          continue;
+                        } // mtd hit matched to etl reco cluster
+                      } // loop through ETL reco clusters
+                    } // loop thorugh set of ETL reco clusters 
+                  } // BTL/ETL cluster search split 
+
+
+
+
+                  // for (const auto& MtdHits : *mtdTrkHitHandle){ // Matching recHit to MTDtrackingRecHit
+                  //   if (good_association || recH_to_Mtdhit_match)
+                  //     break;
+                  //   //if (MTDDetId(hits.id()).mtdSubDetector() == MTDDetId::MTDType::BTL)
+                  //   //if (MTDDetId(MtdHits.id()).mtdSubDetector() == 1  || MTDDetId(MtdHits.id()).mtdSubDetector() == 2){
+                  //   for (const auto& MtdHit : MtdHits){
+                  //     if (good_association || recH_to_Mtdhit_match)
+                  //       break;
+                  //     //if(MtdHit.localPosition().x() == hit->localPosition().x() && MtdHit.localPosition().y() == hit->localPosition().y() && MtdHit.localPosition().z() == hit->localPosition().z()){ // Check .globalPosition()
+                  //     if( (MtdHit.localPosition().x() == hit->localPosition().x()) && (MtdHit.localPosition().y() == hit->localPosition().y()) && (MtdHit.localPosition().z() == hit->localPosition().z()) ){ // Check .localPosition() // Matching condition for recHit to MTDtrackingRecHit
+                  //       recH_to_Mtdhit_match = true;
+                  //       Ttrack_hitMatchMTD.push_back(true);
+                  //       const FTLCluster& hit_cluster = MtdHit.mtdCluster(); // reco cluster linked to MTDtrackingRecHit
+
+                  //       if (abs(track.eta()) < 1.5){ // Should be a BTL cluster
+                  //         for (const auto& DetSetCluBTL : *btlRecCluHandle) { // BTL check
+                  //           if (good_association)
+                  //             break;
+                  //           for (const auto& clusterBTL : DetSetCluBTL) { // Scan throguh btl reco clusters to find a match
+                  //             if (good_association)
+                  //               break;
+                  //             if(isSameCluster(hit_cluster , clusterBTL)){ // find the reco Cluster inside the recoCluster collections
+                  //               //hit_clust_match_btl = true;
+                  //               Ttrack_hasRecoClu.push_back(true);
+
+                  //               edm::Ref<edmNew::DetSetVector<FTLCluster>, FTLCluster> clusterRefBTL = edmNew::makeRefTo(btlRecCluHandle, &clusterBTL); // get the reference to reco cluster inside the collections
+                  //               auto itp = r2sAssociationMap.equal_range(clusterRefBTL); // find the linked simCluster
+                  //               if (itp.first != itp.second) { // find the linked simCluster
+                  //                 std::vector<MtdSimLayerClusterRef> simClustersRefs_RecoMatchBTL = (*itp.first).second;  // the range of itp.first, itp.second should be always 1
+                  //                 Ttrack_RecoSimLink.push_back(true);
                                   
-                                  for (unsigned int i = 0; i < simClustersRefs_RecoMatchBTL.size(); i++) {
-                                    auto simClusterRef_RecoMatchBTL = simClustersRefs_RecoMatchBTL[i];
+                  //                 for (unsigned int i = 0; i < simClustersRefs_RecoMatchBTL.size(); i++) {
+                  //                   auto simClusterRef_RecoMatchBTL = simClustersRefs_RecoMatchBTL[i];
 
-                                    //Ttrack_CluX1.push_back((*SimCluRefs).x());
-                                    //Ttrack_CluX2.push_back((*simClusterRef_RecoMatchBTL).x());
-                                    Ttrack_CluTime1.push_back((*SimCluRefs).simLCTime());
-                                    Ttrack_CluTime2.push_back((*simClusterRef_RecoMatchBTL).simLCTime());
-                                    Ttrack_nSimClust.push_back(i);
+                  //                   //Ttrack_CluX1.push_back((*SimCluRefs).x());
+                  //                   //Ttrack_CluX2.push_back((*simClusterRef_RecoMatchBTL).x());
+                  //                   Ttrack_CluTime1.push_back((*SimCluRefs).simLCTime());
+                  //                   Ttrack_CluTime2.push_back((*simClusterRef_RecoMatchBTL).simLCTime());
+                  //                   Ttrack_nSimClust.push_back(i);
 
-                                    //if(simClusterRef_RecoMatchBTL == SimCluRefs){
-                                    if((*simClusterRef_RecoMatchBTL).simLCTime() == (*SimCluRefs).simLCTime()){ // check if the sim cluster linked to reco cluster is the same as the one linked to TP.
-                                      good_association = true;
-                                      Ttrack_FullMatch.push_back(true);
-                                      break;
-                                    }
-                                  }
-                                }
-                              }else{
-                                continue;
-                              } // mtd hit matched to btl reco cluster
-                            } // loop through BTL reco clusters
-                          } // loop thorugh set of BTL reco clusters  
-                        }else{ // Should be an ETL cluster
-                          for (const auto& DetSetCluETL : *etlRecCluHandle) { // ETL check
-                            if (good_association)
-                              break;
-                            for (const auto& clusterETL : DetSetCluETL) { // Scan throguh etl reco clusters to find a match
-                              if (good_association)
-                                break; 
-                              if(isSameCluster(hit_cluster , clusterETL)){
-                                //hit_clust_match_etl = true;
-                                Ttrack_hasRecoClu.push_back(true);
+                  //                   //if(simClusterRef_RecoMatchBTL == SimCluRefs){
+                  //                   if((*simClusterRef_RecoMatchBTL).simLCTime() == (*SimCluRefs).simLCTime()){ // check if the sim cluster linked to reco cluster is the same as the one linked to TP.
+                  //                     good_association = true;
+                  //                     Ttrack_FullMatch.push_back(true);
+                  //                     break;
+                  //                   }
+                  //                 }
+                  //               }
+                  //             }else{
+                  //               continue;
+                  //             } // mtd hit matched to btl reco cluster
+                  //           } // loop through BTL reco clusters
+                  //         } // loop thorugh set of BTL reco clusters  
+                  //       }else{ // Should be an ETL cluster
+                  //         for (const auto& DetSetCluETL : *etlRecCluHandle) { // ETL check
+                  //           if (good_association)
+                  //             break;
+                  //           for (const auto& clusterETL : DetSetCluETL) { // Scan throguh etl reco clusters to find a match
+                  //             if (good_association)
+                  //               break; 
+                  //             if(isSameCluster(hit_cluster , clusterETL)){
+                  //               //hit_clust_match_etl = true;
+                  //               Ttrack_hasRecoClu.push_back(true);
 
-                                edm::Ref<edmNew::DetSetVector<FTLCluster>, FTLCluster> clusterRefETL = edmNew::makeRefTo(etlRecCluHandle, &clusterETL);
-                                auto itp = r2sAssociationMap.equal_range(clusterRefETL);
-                                if (itp.first != itp.second) {
-                                  std::vector<MtdSimLayerClusterRef> simClustersRefs_RecoMatchETL = (*itp.first).second;  // the range of itp.first, itp.second should be always 1
-                                  Ttrack_RecoSimLink.push_back(true);
+                  //               edm::Ref<edmNew::DetSetVector<FTLCluster>, FTLCluster> clusterRefETL = edmNew::makeRefTo(etlRecCluHandle, &clusterETL);
+                  //               auto itp = r2sAssociationMap.equal_range(clusterRefETL);
+                  //               if (itp.first != itp.second) {
+                  //                 std::vector<MtdSimLayerClusterRef> simClustersRefs_RecoMatchETL = (*itp.first).second;  // the range of itp.first, itp.second should be always 1
+                  //                 Ttrack_RecoSimLink.push_back(true);
                                   
-                                  for (unsigned int i = 0; i < simClustersRefs_RecoMatchETL.size(); i++) {
-                                    auto simClusterRef_RecoMatchETL = simClustersRefs_RecoMatchETL[i];
+                  //                 for (unsigned int i = 0; i < simClustersRefs_RecoMatchETL.size(); i++) {
+                  //                   auto simClusterRef_RecoMatchETL = simClustersRefs_RecoMatchETL[i];
 
-                                    //Ttrack_CluX1.push_back((*SimCluRefs).x());
-                                    //Ttrack_CluX2.push_back((*simClusterRef_RecoMatchETL).x());
-                                    //Ttrack_CluY1.push_back((*SimCluRefs).y());
-                                    //Ttrack_CluY2.push_back((*simClusterRef_RecoMatchETL).y());
-                                    Ttrack_CluTime1.push_back((*SimCluRefs).simLCTime());
-                                    Ttrack_CluTime2.push_back((*simClusterRef_RecoMatchETL).simLCTime());
-                                    Ttrack_nSimClust.push_back(i);
+                  //                   //Ttrack_CluX1.push_back((*SimCluRefs).x());
+                  //                   //Ttrack_CluX2.push_back((*simClusterRef_RecoMatchETL).x());
+                  //                   //Ttrack_CluY1.push_back((*SimCluRefs).y());
+                  //                   //Ttrack_CluY2.push_back((*simClusterRef_RecoMatchETL).y());
+                  //                   Ttrack_CluTime1.push_back((*SimCluRefs).simLCTime());
+                  //                   Ttrack_CluTime2.push_back((*simClusterRef_RecoMatchETL).simLCTime());
+                  //                   Ttrack_nSimClust.push_back(i);
 
-                                    //if(simClusterRef_RecoMatchETL == SimCluRefs){
-                                    if((*simClusterRef_RecoMatchETL).simLCTime() == (*SimCluRefs).simLCTime()){
-                                      good_association = true;
-                                      Ttrack_FullMatch.push_back(true);
-                                      break;
-                                    }
-                                  }
-                                }
-                              }else{
-                                continue;
-                              } // mtd hit matched to etl reco cluster
-                            } // loop through ETL reco clusters
-                          } // loop thorugh set of ETL reco clusters 
-                        } // BTL/ETL cluster search split
+                  //                   //if(simClusterRef_RecoMatchETL == SimCluRefs){
+                  //                   if((*simClusterRef_RecoMatchETL).simLCTime() == (*SimCluRefs).simLCTime()){
+                  //                     good_association = true;
+                  //                     Ttrack_FullMatch.push_back(true);
+                  //                     break;
+                  //                   }
+                  //                 }
+                  //               }
+                  //             }else{
+                  //               continue;
+                  //             } // mtd hit matched to etl reco cluster
+                  //           } // loop through ETL reco clusters
+                  //         } // loop thorugh set of ETL reco clusters 
+                  //       } // BTL/ETL cluster search split
 
-                      }else{
-                        continue;
-                      } // trackingRecHit to MTDtrackingRecHit match
-                    } // MTDtrackingRecHit loop
-                    //}
-                  }
+                  //     }else{
+                  //       continue;
+                  //     } // trackingRecHit to MTDtrackingRecHit match
+                  //   } // MTDtrackingRecHit loop
+                  //   //}
+                  // }
 
-                }else{
+                }else{ // trackingRecHit is a hit in MTD
                   continue;
                 } // Hits in MTD
               } // Loop through trackHits 
