@@ -37,21 +37,25 @@ private:
 
   edm::EDGetTokenT<reco::TrackCollection> tracksToken_;
   edm::EDGetTokenT<reco::TrackCollection> tracksMTDToken_;
+  edm::EDGetTokenT<reco::BeamSpot> RecBeamSpotToken_; // Added for updated BDT
 
   edm::EDGetTokenT<edm::ValueMap<float>> btlMatchChi2Token_;
   edm::EDGetTokenT<edm::ValueMap<float>> btlMatchTimeChi2Token_;
   edm::EDGetTokenT<edm::ValueMap<float>> etlMatchChi2Token_;
   edm::EDGetTokenT<edm::ValueMap<float>> etlMatchTimeChi2Token_;
   edm::EDGetTokenT<edm::ValueMap<float>> mtdTimeToken_;
+  edm::EDGetTokenT<edm::ValueMap<float>> sigmamtdTimeToken_; // Added for updated BDT
   edm::EDGetTokenT<edm::ValueMap<float>> pathLengthToken_;
   edm::EDGetTokenT<edm::ValueMap<int>> npixBarrelToken_;
   edm::EDGetTokenT<edm::ValueMap<int>> npixEndcapToken_;
+  edm::EDGetTokenT<edm::ValueMap<float>> outermostHitPositionToken_; // Added for updated BDT
 
   MTDTrackQualityMVA mva_;
 };
 
 MTDTrackQualityMVAProducer::MTDTrackQualityMVAProducer(const ParameterSet& iConfig)
     : tracksToken_(consumes<reco::TrackCollection>(iConfig.getParameter<edm::InputTag>("tracksSrc"))),
+      RecBeamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("offlineBS"))), // Added for updated BDT
       btlMatchChi2Token_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("btlMatchChi2Src"))),
       btlMatchTimeChi2Token_(
           consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("btlMatchTimeChi2Src"))),
@@ -59,9 +63,11 @@ MTDTrackQualityMVAProducer::MTDTrackQualityMVAProducer(const ParameterSet& iConf
       etlMatchTimeChi2Token_(
           consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("etlMatchTimeChi2Src"))),
       mtdTimeToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("mtdTimeSrc"))),
+      sigmamtdTimeToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("sigmamtdTimeSrc"))), // Added for updated BDT
       pathLengthToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("pathLengthSrc"))),
       npixBarrelToken_(consumes<edm::ValueMap<int>>(iConfig.getParameter<edm::InputTag>("npixBarrelSrc"))),
       npixEndcapToken_(consumes<edm::ValueMap<int>>(iConfig.getParameter<edm::InputTag>("npixEndcapSrc"))),
+      outermostHitPositionToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("outermostHitPositionSrc"))), // Added for updated BDT
       mva_(iConfig.getParameter<edm::FileInPath>("qualityBDT_weights_file").fullPath()) {
   produces<edm::ValueMap<float>>(mvaName);
 }
@@ -79,18 +85,26 @@ void MTDTrackQualityMVAProducer::fillDescriptions(edm::ConfigurationDescriptions
   desc.add<edm::InputTag>("etlMatchTimeChi2Src", edm::InputTag("trackExtenderWithMTD", "etlMatchTimeChi2"))
       ->setComment("ETL Chi2 Matching value Map");
   desc.add<edm::InputTag>("mtdTimeSrc", edm::InputTag("trackExtenderWithMTD", "generalTracktmtd"))
-      ->setComment("MTD TIme value Map");
+      ->setComment("MTD Time value Map");
+  desc.add<edm::InputTag>("sigmamtdTimeSrc", edm::InputTag("trackExtenderWithMTD", "generalTracksigmatmtd"))
+      ->setComment("sigma MTD Time value Map"); // Added for updated BDT
   desc.add<edm::InputTag>("pathLengthSrc", edm::InputTag("trackExtenderWithMTD", "generalTrackPathLength"))
       ->setComment("MTD PathLength value Map");
   desc.add<edm::InputTag>("npixBarrelSrc", edm::InputTag("trackExtenderWithMTD", "npixBarrel"))
       ->setComment("# of Barrel pixel associated to refitted tracks");
   desc.add<edm::InputTag>("npixEndcapSrc", edm::InputTag("trackExtenderWithMTD", "npixEndcap"))
       ->setComment("# of Endcap pixel associated to refitted tracks");
+  desc.add<edm::InputTag>("outermostHitPositionSrc", edm::InputTag("trackExtenderWithMTD", "generalTrackOutermostHitPosition")); // Added for updated BDT
+  desc.add<edm::InputTag>("offlineBS", edm::InputTag("offlineBeamSpot")); // Added for updated BDT
+  /*desc.add<edm::FileInPath>("qualityBDT_weights_file",
+                            edm::FileInPath("/afs/cern.ch/user/n/nstrautn/CMSSW_14_2_0_pre1/src/RecoMTD/TimingIDTools/test/4DMTD_tree_v2_wDispl_d7_Reg.xml"))
+      ->setComment("Track MTD quality BDT weights");*/
   desc.add<edm::FileInPath>("qualityBDT_weights_file",
-                            edm::FileInPath("RecoMTD/TimingIDTools/data/clf4D_MTDquality_bo.xml"))
+                            edm::FileInPath("RecoMTD/TimingIDTools/data/4DMTD_tree_v2_wDispl_d7_Reg.xml"))
       ->setComment("Track MTD quality BDT weights");
   descriptions.add("mtdTrackQualityMVAProducer", desc);
 }
+
 
 template <class H, class T>
 void MTDTrackQualityMVAProducer::fillValueMap(edm::Event& iEvent,
@@ -109,6 +123,11 @@ void MTDTrackQualityMVAProducer::produce(edm::Event& ev, const edm::EventSetup& 
   ev.getByToken(tracksToken_, tracksH);
   const auto& tracks = *tracksH;
 
+  reco::BeamSpot beamSpot;
+  edm::Handle<reco::BeamSpot> BeamSpotH;
+  ev.getByToken(RecBeamSpotToken_, BeamSpotH);
+  beamSpot = *BeamSpotH;
+
   const auto& btlMatchChi2 = ev.get(btlMatchChi2Token_);
   const auto& btlMatchTimeChi2 = ev.get(btlMatchTimeChi2Token_);
   const auto& etlMatchChi2 = ev.get(etlMatchChi2Token_);
@@ -117,6 +136,8 @@ void MTDTrackQualityMVAProducer::produce(edm::Event& ev, const edm::EventSetup& 
   const auto& npixBarrel = ev.get(npixBarrelToken_);
   const auto& npixEndcap = ev.get(npixEndcapToken_);
   const auto& mtdTime = ev.get(mtdTimeToken_);
+  const auto& sigmamtdTime = ev.get(sigmamtdTimeToken_);
+  const auto& lHitPos = ev.get(outermostHitPositionToken_);
 
   std::vector<float> mvaOutRaw;
 
@@ -127,6 +148,7 @@ void MTDTrackQualityMVAProducer::produce(edm::Event& ev, const edm::EventSetup& 
       mvaOutRaw.push_back(-1.);
     else {
       mvaOutRaw.push_back(mva_(trackref,
+                               beamSpot,
                                npixBarrel,
                                npixEndcap,
                                btlMatchChi2,
@@ -134,7 +156,9 @@ void MTDTrackQualityMVAProducer::produce(edm::Event& ev, const edm::EventSetup& 
                                etlMatchChi2,
                                etlMatchTimeChi2,
                                mtdTime,
-                               pathLength));
+                               sigmamtdTime,
+                               pathLength,
+                               lHitPos));
     }
   }
   fillValueMap(ev, tracksH, mvaOutRaw, mvaName);
