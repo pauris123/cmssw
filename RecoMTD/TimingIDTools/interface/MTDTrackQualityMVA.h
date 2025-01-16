@@ -7,37 +7,44 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 
-#include "CommonTools/MVAUtils/interface/TMVAEvaluator.h"
+#include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
+#include <memory>
+#include <vector>
+#include <map>
 
-#define MTDTRACKQUALITYMVA_VARS(MTDBDTVAR) \
-  MTDBDTVAR(pt)                            \
-  MTDBDTVAR(eta)                           \
-  MTDBDTVAR(phi)                           \
-  MTDBDTVAR(chi2)                          \
-  MTDBDTVAR(ndof)                          \
-  MTDBDTVAR(numberOfValidHits)             \
-  MTDBDTVAR(numberOfValidPixelBarrelHits)  \
-  MTDBDTVAR(numberOfValidPixelEndcapHits)  \
-  MTDBDTVAR(btlMatchChi2)                  \
-  MTDBDTVAR(btlMatchTimeChi2)              \
-  MTDBDTVAR(etlMatchChi2)                  \
-  MTDBDTVAR(etlMatchTimeChi2)              \
-  MTDBDTVAR(mtdt)                          \
-  MTDBDTVAR(path_len)
+#define MTDTRACKQUALITYMVA_VARS(MTDDNNVAR)       \
+  MTDDNNVAR(Track_pt)                            \
+  MTDDNNVAR(Track_eta)                           \
+  MTDDNNVAR(Track_phi)                           \
+  MTDDNNVAR(Track_dz)                            \
+  MTDDNNVAR(Track_dxy)                           \
+  MTDDNNVAR(Track_chi2)                          \
+  MTDDNNVAR(Track_ndof)                          \
+  MTDDNNVAR(Track_npixBarrelValidHits)           \
+  MTDDNNVAR(Track_npixEndcapValidHits)           \
+  MTDDNNVAR(Track_BTLchi2)                       \
+  MTDDNNVAR(Track_BTLtime_chi2)                  \
+  MTDDNNVAR(Track_ETLchi2)                       \
+  MTDDNNVAR(Track_ETLtime_chi2)                  \
+  MTDDNNVAR(Track_Tmtd)                          \
+  MTDDNNVAR(Track_sigmaTmtd)                     \
+  MTDDNNVAR(Track_length)                        \
+  MTDDNNVAR(Track_lHitPos)                        
 
-#define MTDBDTVAR_ENUM(ENUM) ENUM,
-#define MTDBDTVAR_STRING(STRING) #STRING,
+#define MTDDNNVAR_ENUM(ENUM) ENUM,
+#define MTDDNNVAR_STRING(STRING) #STRING,
 
 class MTDTrackQualityMVA {
 public:
   //---ctors---
-  MTDTrackQualityMVA(std::string weights_file);
+  MTDTrackQualityMVA(std::string model_file);
 
-  enum class VarID { MTDTRACKQUALITYMVA_VARS(MTDBDTVAR_ENUM) };
+  enum class VarID { MTDTRACKQUALITYMVA_VARS(MTDDNNVAR_ENUM) };
 
   //---getters---
   // 4D
-  float operator()(const reco::TrackRef& trk,
+  float evaluate(const reco::TrackRef& trk,
+                   const reco::BeamSpot& beamspot,
                    const edm::ValueMap<int>& npixBarrels,
                    const edm::ValueMap<int>& npixEndcaps,
                    const edm::ValueMap<float>& btl_chi2s,
@@ -45,11 +52,18 @@ public:
                    const edm::ValueMap<float>& etl_chi2s,
                    const edm::ValueMap<float>& etl_time_chi2s,
                    const edm::ValueMap<float>& tmtds,
-                   const edm::ValueMap<float>& trk_lengths) const;
+                   const edm::ValueMap<float>& sigmatmtds,
+                   const edm::ValueMap<float>& trk_lengths,
+                   const edm::ValueMap<float>& trk_lhitpos) const;
 
 private:
-  std::vector<std::string> vars_, spec_vars_;
-  std::unique_ptr<TMVAEvaluator> mva_;
+  // Variables
+  std::vector<std::string> vars_; // Names of variables
+
+  // ONNX runtime components
+  std::unique_ptr<Ort::Session> session_;
+  Ort::Env env_;
+  Ort::SessionOptions session_options_;
 };
 
 #endif

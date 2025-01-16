@@ -37,21 +37,25 @@ private:
 
   edm::EDGetTokenT<reco::TrackCollection> tracksToken_;
   edm::EDGetTokenT<reco::TrackCollection> tracksMTDToken_;
+  edm::EDGetTokenT<reco::BeamSpot> RecBeamSpotToken_;
 
   edm::EDGetTokenT<edm::ValueMap<float>> btlMatchChi2Token_;
   edm::EDGetTokenT<edm::ValueMap<float>> btlMatchTimeChi2Token_;
   edm::EDGetTokenT<edm::ValueMap<float>> etlMatchChi2Token_;
   edm::EDGetTokenT<edm::ValueMap<float>> etlMatchTimeChi2Token_;
   edm::EDGetTokenT<edm::ValueMap<float>> mtdTimeToken_;
+  edm::EDGetTokenT<edm::ValueMap<float>> sigmamtdTimeToken_;
   edm::EDGetTokenT<edm::ValueMap<float>> pathLengthToken_;
   edm::EDGetTokenT<edm::ValueMap<int>> npixBarrelToken_;
   edm::EDGetTokenT<edm::ValueMap<int>> npixEndcapToken_;
+  edm::EDGetTokenT<edm::ValueMap<float>> outermostHitPositionToken_;
 
-  MTDTrackQualityMVA mva_;
+  MTDTrackQualityMVA DNN_;
 };
 
 MTDTrackQualityMVAProducer::MTDTrackQualityMVAProducer(const ParameterSet& iConfig)
     : tracksToken_(consumes<reco::TrackCollection>(iConfig.getParameter<edm::InputTag>("tracksSrc"))),
+      RecBeamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("offlineBS"))),
       btlMatchChi2Token_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("btlMatchChi2Src"))),
       btlMatchTimeChi2Token_(
           consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("btlMatchTimeChi2Src"))),
@@ -59,10 +63,12 @@ MTDTrackQualityMVAProducer::MTDTrackQualityMVAProducer(const ParameterSet& iConf
       etlMatchTimeChi2Token_(
           consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("etlMatchTimeChi2Src"))),
       mtdTimeToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("mtdTimeSrc"))),
+      sigmamtdTimeToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("sigmamtdTimeSrc"))),
       pathLengthToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("pathLengthSrc"))),
       npixBarrelToken_(consumes<edm::ValueMap<int>>(iConfig.getParameter<edm::InputTag>("npixBarrelSrc"))),
       npixEndcapToken_(consumes<edm::ValueMap<int>>(iConfig.getParameter<edm::InputTag>("npixEndcapSrc"))),
-      mva_(iConfig.getParameter<edm::FileInPath>("qualityBDT_weights_file").fullPath()) {
+      outermostHitPositionToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("outermostHitPositionSrc"))),
+      DNN_(iConfig.getParameter<edm::FileInPath>("DNN_file").fullPath()) {
   produces<edm::ValueMap<float>>(mvaName);
 }
 
@@ -80,15 +86,19 @@ void MTDTrackQualityMVAProducer::fillDescriptions(edm::ConfigurationDescriptions
       ->setComment("ETL Chi2 Matching value Map");
   desc.add<edm::InputTag>("mtdTimeSrc", edm::InputTag("trackExtenderWithMTD", "generalTracktmtd"))
       ->setComment("MTD TIme value Map");
+  desc.add<edm::InputTag>("sigmamtdTimeSrc", edm::InputTag("trackExtenderWithMTD", "generalTracksigmatmtd"))
+      ->setComment("sigma MTD TIme value Map");
   desc.add<edm::InputTag>("pathLengthSrc", edm::InputTag("trackExtenderWithMTD", "generalTrackPathLength"))
       ->setComment("MTD PathLength value Map");
   desc.add<edm::InputTag>("npixBarrelSrc", edm::InputTag("trackExtenderWithMTD", "npixBarrel"))
       ->setComment("# of Barrel pixel associated to refitted tracks");
   desc.add<edm::InputTag>("npixEndcapSrc", edm::InputTag("trackExtenderWithMTD", "npixEndcap"))
       ->setComment("# of Endcap pixel associated to refitted tracks");
-  desc.add<edm::FileInPath>("qualityBDT_weights_file",
-                            edm::FileInPath("RecoMTD/TimingIDTools/data/clf4D_MTDquality_bo.xml"))
-      ->setComment("Track MTD quality BDT weights");
+  desc.add<edm::InputTag>("outermostHitPositionSrc", edm::InputTag("trackExtenderWithMTD", "generalTrackOutermostHitPosition"));
+  desc.add<edm::InputTag>("offlineBS", edm::InputTag("offlineBeamSpot"));
+  desc.add<edm::FileInPath>("DNN_file",
+                            edm::FileInPath("RecoMTD/TimingIDTools/data/hypermodel_save_test.onnx"))
+      ->setComment("Track MTD quality DNN");
   descriptions.add("mtdTrackQualityMVAProducer", desc);
 }
 
@@ -109,6 +119,13 @@ void MTDTrackQualityMVAProducer::produce(edm::Event& ev, const edm::EventSetup& 
   ev.getByToken(tracksToken_, tracksH);
   const auto& tracks = *tracksH;
 
+  reco::BeamSpot beamSpot;
+  edm::Handle<reco::BeamSpot> BeamSpotH;
+  ev.getByToken(RecBeamSpotToken_, BeamSpotH);
+  beamSpot = *BeamSpotH;
+
+
+
   const auto& btlMatchChi2 = ev.get(btlMatchChi2Token_);
   const auto& btlMatchTimeChi2 = ev.get(btlMatchTimeChi2Token_);
   const auto& etlMatchChi2 = ev.get(etlMatchChi2Token_);
@@ -117,16 +134,19 @@ void MTDTrackQualityMVAProducer::produce(edm::Event& ev, const edm::EventSetup& 
   const auto& npixBarrel = ev.get(npixBarrelToken_);
   const auto& npixEndcap = ev.get(npixEndcapToken_);
   const auto& mtdTime = ev.get(mtdTimeToken_);
+  const auto& sigmamtdTime = ev.get(sigmamtdTimeToken_);
+  const auto& lHitPos = ev.get(outermostHitPositionToken_);
 
-  std::vector<float> mvaOutRaw;
+  std::vector<float> DNNOutRaw;
 
   //Loop over tracks collection
   for (unsigned int itrack = 0; itrack < tracks.size(); ++itrack) {
     const reco::TrackRef trackref(tracksH, itrack);
     if (pathLength[trackref] == -1.)
-      mvaOutRaw.push_back(-1.);
+      DNNOutRaw.push_back(-1.);
     else {
-      mvaOutRaw.push_back(mva_(trackref,
+      DNNOutRaw.push_back(DNN_.evaluate(trackref,
+                               beamSpot,
                                npixBarrel,
                                npixEndcap,
                                btlMatchChi2,
@@ -134,10 +154,12 @@ void MTDTrackQualityMVAProducer::produce(edm::Event& ev, const edm::EventSetup& 
                                etlMatchChi2,
                                etlMatchTimeChi2,
                                mtdTime,
-                               pathLength));
+                               sigmamtdTime,
+                               pathLength,
+                               lHitPos));
     }
   }
-  fillValueMap(ev, tracksH, mvaOutRaw, mvaName);
+  fillValueMap(ev, tracksH, DNNOutRaw, mvaName);
 }
 
 //define this as a plug-in
