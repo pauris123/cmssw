@@ -97,7 +97,7 @@ void MTDTrackQualityMVAProducer::fillDescriptions(edm::ConfigurationDescriptions
   desc.add<edm::InputTag>("outermostHitPositionSrc", edm::InputTag("trackExtenderWithMTD", "generalTrackOutermostHitPosition"));
   desc.add<edm::InputTag>("offlineBS", edm::InputTag("offlineBeamSpot"));
   desc.add<edm::FileInPath>("DNN_file",
-                            edm::FileInPath("RecoMTD/TimingIDTools/data/hypermodel_save_test.onnx"))
+                            edm::FileInPath("RecoMTD/TimingIDTools/data/DNN_hypermodel_final_.onnx"))
       ->setComment("Track MTD quality DNN");
   descriptions.add("mtdTrackQualityMVAProducer", desc);
 }
