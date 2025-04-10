@@ -1,6 +1,7 @@
 <use name="DataFormats/TrackReco"/>
 <use name="DataFormats/VertexReco"/>
 <use name="CommonTools/MVAUtils"/>
+<use name="onnxruntime" />
 <export>
   <lib name="1"/>
 </export>

@@ -32,7 +32,7 @@ process.MessageLogger.cerr.FwkReport  = cms.untracked.PSet(
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        'file:step3.root'
+        'file:/afs/cern.ch/user/n/nstrautn/CMSSW_15_0_0_pre3/src/RecoMTD/TimingIDTools/work/29903.0_SingleMuFlatPt0p7To10+Run4D110PU/step3.root'
     )
 )
 
